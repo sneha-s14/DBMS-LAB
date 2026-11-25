@@ -148,3 +148,9 @@ SELECT * FROM Orders;
 INSERT INTO OrderItems
 VALUES (006, 0002, 2);
 
+--Create a view to display orderID and shipment date of all orders shipped from a warehouse 5.
+create view ShipmentDatesFromWarehouse5 as
+select order_id, ship_date
+from Shipments
+where warehouse_id=5;
+select * from ShipmentDatesFromWarehouse5;
