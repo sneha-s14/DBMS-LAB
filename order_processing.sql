@@ -112,28 +112,39 @@ SELECT * FROM Shipments;
 select max(unitprice) from Items;
 
 --A trigger that updates order_amount based on quantity and unit price of order_item
-USE sailors;
+USE order_processing;
 
-DROP TRIGGER IF EXISTS CheckAndDelete;
+DROP TRIGGER IF EXISTS UpdateOrderAmt;
 
 DELIMITER //
 
-CREATE TRIGGER CheckAndDelete
-BEFORE DELETE ON Boat
+CREATE TRIGGER UpdateOrderAmt
+AFTER INSERT ON OrderItems
 FOR EACH ROW
 BEGIN
-    IF EXISTS (
-        SELECT 1
-        FROM reserves
-        WHERE bid = OLD.bid
-    ) THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT =
-        'Boat is reserved and cannot be deleted';
-    END IF;
+    UPDATE Orders
+    SET order_amt = (
+        SELECT SUM(oi.qty * i.unitprice)
+        FROM OrderItems oi
+        JOIN Items i
+        ON oi.item_id = i.item_id
+        WHERE oi.order_id = NEW.order_id
+    )
+    WHERE order_id = NEW.order_id;
 END //
 
 DELIMITER ;
 
 Testing:
-DELETE FROM Boat WHERE bid = 103;
+INSERT INTO Orders
+VALUES (006, '2020-12-23', 0004, 1200);
+
+INSERT INTO OrderItems
+VALUES (006, 0001, 5);
+
+
+SELECT * FROM Orders;
+
+INSERT INTO OrderItems
+VALUES (006, 0002, 2);
+
